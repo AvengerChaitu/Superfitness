@@ -23,7 +23,7 @@ import com.thrivio.data.local.entity.WorkoutEntity
         MoodEntity::class,
         UserStatsEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

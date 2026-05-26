@@ -9,6 +9,12 @@ interface MealDao {
     @Query("SELECT * FROM local_meals WHERE date = :date ORDER BY createdAt DESC")
     fun getMealsForDate(date: String): Flow<List<MealEntity>>
 
+    @Query("SELECT * FROM local_meals WHERE isSynced = 0")
+    suspend fun getAllUnsyncedMeals(): List<MealEntity>
+
+    @Query("UPDATE local_meals SET isSynced = 1 WHERE id = :id")
+    suspend fun markSynced(id: Long)
+
     @Upsert
     suspend fun upsertMeal(meal: MealEntity)
 

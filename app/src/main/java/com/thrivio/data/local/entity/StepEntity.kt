@@ -10,5 +10,6 @@ data class StepEntity(
     val steps: Int = 0,
     val calories: Int = 0,
     val distanceMeters: Float = 0f,
+    val isSynced: Boolean = false,
     val updatedAt: Long = System.currentTimeMillis()
 )

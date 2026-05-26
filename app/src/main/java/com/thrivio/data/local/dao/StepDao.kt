@@ -12,6 +12,12 @@ interface StepDao {
     @Query("SELECT * FROM local_step_counts ORDER BY date DESC LIMIT 30")
     fun getRecentSteps(): Flow<List<StepEntity>>
 
+    @Query("SELECT * FROM local_step_counts WHERE isSynced = 0")
+    suspend fun getAllUnsyncedSteps(): List<StepEntity>
+
+    @Query("UPDATE local_step_counts SET isSynced = 1 WHERE id = :id")
+    suspend fun markSynced(id: Long)
+
     @Upsert
     suspend fun upsertSteps(step: StepEntity)
 

@@ -3,6 +3,7 @@ package com.thrivio.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -26,7 +27,7 @@ import com.thrivio.ui.DashboardViewModel
 import com.thrivio.ui.theme.*
 
 @Composable
-fun ProfileScreen(viewModel: DashboardViewModel) {
+fun ProfileScreen(viewModel: DashboardViewModel, onPremiumClick: () -> Unit = {}) {
     val stats by viewModel.stats.collectAsState()
     val xpProgress by viewModel.xpProgress.collectAsState()
 
@@ -128,6 +129,29 @@ fun ProfileScreen(viewModel: DashboardViewModel) {
                 StatRow(Icons.Default.Restaurant, "Meals logged", "${stats.mealsLoggedToday}")
                 StatRow(Icons.Default.FitnessCenter, "Workouts", "${stats.workoutsCompletedToday}")
                 StatRow(Icons.Default.SelfImprovement, "Meditation", "${stats.meditationMinutesToday} min")
+            }
+        }
+
+        // Premium CTA
+        Card(
+            modifier = Modifier.fillMaxWidth().clickable { onPremiumClick() },
+            colors = CardDefaults.cardColors(containerColor = XpOrange.copy(alpha = 0.1f)),
+            border = BorderStroke(1.dp, XpOrange)
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Stars, null, tint = XpOrange, modifier = Modifier.size(24.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text("Unlock Premium", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = XpOrange)
+                        Text("Streak freezes, custom avatars & leagues", color = Color.Gray, fontSize = 12.sp)
+                    }
+                }
+                Icon(Icons.Default.ChevronRight, null, tint = XpOrange)
             }
         }
     }

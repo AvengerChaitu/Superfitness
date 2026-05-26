@@ -27,7 +27,7 @@ import com.thrivio.ui.DashboardViewModel
 import com.thrivio.ui.theme.*
 
 @Composable
-fun NutritionScreen(viewModel: DashboardViewModel) {
+fun NutritionScreen(viewModel: DashboardViewModel, onBarcodeClick: () -> Unit = {}) {
     val meals by viewModel.todayMeals.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -38,12 +38,21 @@ fun NutritionScreen(viewModel: DashboardViewModel) {
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = MascotGreen,
-                contentColor = Color.White
-            ) {
-                Icon(Icons.Default.Add, "Log meal")
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                FloatingActionButton(
+                    onClick = onBarcodeClick,
+                    containerColor = Color(0xFF6200EE),
+                    contentColor = Color.White
+                ) {
+                    Icon(Icons.Default.CameraAlt, "Scan barcode")
+                }
+                FloatingActionButton(
+                    onClick = { showAddDialog = true },
+                    containerColor = MascotGreen,
+                    contentColor = Color.White
+                ) {
+                    Icon(Icons.Default.Add, "Log meal")
+                }
             }
         }
     ) { innerPadding ->
