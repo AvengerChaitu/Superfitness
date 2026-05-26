@@ -8,9 +8,11 @@ import com.thrivio.data.local.dao.MealDao
 import com.thrivio.data.local.dao.MoodDao
 import com.thrivio.data.local.dao.StepDao
 import com.thrivio.data.local.dao.WorkoutDao
+import com.thrivio.data.local.dao.UserStatsDao
 import com.thrivio.data.local.entity.MealEntity
 import com.thrivio.data.local.entity.MoodEntity
 import com.thrivio.data.local.entity.StepEntity
+import com.thrivio.data.local.entity.UserStatsEntity
 import com.thrivio.data.local.entity.WorkoutEntity
 
 @Database(
@@ -18,9 +20,10 @@ import com.thrivio.data.local.entity.WorkoutEntity
         StepEntity::class,
         MealEntity::class,
         WorkoutEntity::class,
-        MoodEntity::class
+        MoodEntity::class,
+        UserStatsEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -28,6 +31,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun mealDao(): MealDao
     abstract fun workoutDao(): WorkoutDao
     abstract fun moodDao(): MoodDao
+    abstract fun userStatsDao(): UserStatsDao
 
     companion object {
         @Volatile
