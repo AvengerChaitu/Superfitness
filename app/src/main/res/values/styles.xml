@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Lightweight launching window theme using device defaults. -->
+    <!-- The actual UI design is rendered programmatically in Jetpack Compose. -->
+    <style name="Theme.Thrivio" parent="android:Theme.DeviceDefault.NoActionBar">
+        <!-- Simple color attributes -->
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+</resources>

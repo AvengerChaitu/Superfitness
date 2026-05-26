@@ -1,0 +1,44 @@
+# Android / Gradle
+.gradle/
+build/
+app/build/
+local.properties
+*.iml
+.idea/
+*.apk
+*.aab
+*.dex
+*.class
+*.log
+
+# Kotlin
+*.kotlin_module
+
+# IDE
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment / Secrets (DO NOT COMMIT)
+*.env
+.env.local
+*.key
+secrets.*
+
+# Firebase
+google-services.json
+google-services-debug.json
+
+# Supabase
+.supabase/
+
+# Edge Functions (node_modules within)
+supabase/functions/*/node_modules/
+
+# Misc
+*.bak
+*.tmp
