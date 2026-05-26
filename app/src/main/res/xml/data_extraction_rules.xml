@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xml-rules>
+<data-extraction-rules>
     <include domain="sharedpref" path="." />
     <include domain="database" path="." />
-</xml-rules>
+</data-extraction-rules>

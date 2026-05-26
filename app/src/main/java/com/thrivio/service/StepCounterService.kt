@@ -15,10 +15,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.thrivio.data.local.AppDatabase
 import com.thrivio.data.local.entity.StepEntity
-import com.thrivio.network.SupabaseClient
-import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.*
-import java.time.Instant
 import java.time.LocalDate
 
 class StepCounterService : Service(), SensorEventListener {
@@ -45,8 +42,14 @@ class StepCounterService : Service(), SensorEventListener {
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         stepCounterSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
 
-        createNotificationChannel()
-        startForeground(NOTIFICATION_ID, buildActivityNotification("Tracking your steps..."))
+        try {
+            createNotificationChannel()
+            startForeground(NOTIFICATION_ID, buildActivityNotification("Tracking your steps..."))
+        } catch (_: Exception) {
+            // Foreground service may fail on Android 13+ without notification permission
+            stopSelf()
+            return
+        }
 
         stepCounterSensor?.let { sensor ->
             sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI)
@@ -68,11 +71,13 @@ class StepCounterService : Service(), SensorEventListener {
 
         totalStepsToday = (totalStepsSinceBoot - initialStepsBootOffset).toInt()
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(
-            NOTIFICATION_ID,
-            buildActivityNotification("$totalStepsToday steps today!")
-        )
+        try {
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.notify(
+                NOTIFICATION_ID,
+                buildActivityNotification("$totalStepsToday steps today!")
+            )
+        } catch (_: Exception) { }
 
         if (totalStepsToday - lastSavedSteps >= 50) {
             lastSavedSteps = totalStepsToday
@@ -84,23 +89,10 @@ class StepCounterService : Service(), SensorEventListener {
         serviceScope.launch {
             try {
                 val today = LocalDate.now().toString()
-
                 db.stepDao().upsertSteps(
                     StepEntity(date = today, steps = steps)
                 )
-
-                SupabaseClient.client.postgrest.from("step_counts").upsert(
-                    mapOf(
-                        "date" to today,
-                        "steps" to steps,
-                        "calories" to 0,
-                        "distance_meters" to 0.0,
-                        "updated_at" to Instant.now().toString()
-                    )
-                )
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            } catch (_: Exception) { }
         }
     }
 
@@ -134,7 +126,9 @@ class StepCounterService : Service(), SensorEventListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        sensorManager.unregisterListener(this)
+        if (::sensorManager.isInitialized) {
+            try { sensorManager.unregisterListener(this) } catch (_: Exception) { }
+        }
         serviceJob.cancel()
     }
 }
