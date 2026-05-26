@@ -8,7 +8,7 @@ import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.thrivio.network.SupabaseClient
-import io.github.jan.tennert.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,10 +24,11 @@ class ThrivioFcmService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        // Push the new FCM token to Supabase device_tokens table
         fcmScope.launch {
             try {
-                // SupabaseClient.client.postgrest["device_tokens"].insert(DeviceToken(fcm_token = token))
+                SupabaseClient.client.postgrest.from("device_tokens").upsert(
+                    mapOf("fcm_token" to token, "device_type" to "android")
+                )
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -36,9 +37,9 @@ class ThrivioFcmService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
-        
-        val title = remoteMessage.notification?.title ?: remoteMessage.data["title"] ?: "Thrivio Notification"
-        val body = remoteMessage.notification?.body ?: remoteMessage.data["body"] ?: "Aero has an update for you!"
+
+        val title = remoteMessage.notification?.title ?: remoteMessage.data["title"] ?: "Thrivio"
+        val body = remoteMessage.notification?.body ?: remoteMessage.data["body"] ?: "Aero has an update!"
 
         showNotification(title, body)
     }

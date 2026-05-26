@@ -1,0 +1,34 @@
+{
+  "project_info": {
+    "project_number": "542824428284",
+    "project_id": "superfitness-99",
+    "storage_bucket": "superfitness-99.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:542824428284:android:f8118c81b4db3e8edadd79",
+        "android_client_info": {
+          "package_name": "com.thrivio"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "542824428284-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC35UGMFHH-bgm1_c5UR4vUS0iyvWRUivE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

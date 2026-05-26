@@ -13,25 +13,24 @@ import android.hardware.SensorManager
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import com.thrivio.data.local.AppDatabase
+import com.thrivio.data.local.entity.StepEntity
 import com.thrivio.network.SupabaseClient
-import io.github.jan.tennert.supabase.postgrest.postgrest
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.*
+import java.time.Instant
+import java.time.LocalDate
 
 class StepCounterService : Service(), SensorEventListener {
 
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
+    private val db by lazy { AppDatabase.getInstance(this) }
 
     private lateinit var sensorManager: SensorManager
     private var stepCounterSensor: Sensor? = null
 
-    private var initialStepsBootOffset = -1
+    private var initialStepsBootOffset = -1L
     private var totalStepsToday = 0
     private var lastSavedSteps = 0
 
@@ -47,9 +46,8 @@ class StepCounterService : Service(), SensorEventListener {
         stepCounterSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
 
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, buildActivityNotification("Initializing Aero Step Tracker..."))
+        startForeground(NOTIFICATION_ID, buildActivityNotification("Tracking your steps..."))
 
-        // Register steps sensor listener
         stepCounterSensor?.let { sensor ->
             sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI)
         }
@@ -62,36 +60,44 @@ class StepCounterService : Service(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null || event.sensor.type != Sensor.TYPE_STEP_COUNTER) return
 
-        val totalStepsSinceBoot = event.values[0].toInt()
+        val totalStepsSinceBoot = event.values[0].toLong()
 
-        if (initialStepsBootOffset == -1) {
+        if (initialStepsBootOffset == -1L) {
             initialStepsBootOffset = totalStepsSinceBoot
-            // Pull any existing saved steps from local database or shared prefs if needed
         }
 
-        totalStepsToday = totalStepsSinceBoot - initialStepsBootOffset
-        
-        // Update notification in real-time
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(NOTIFICATION_ID, buildActivityNotification("Aero tracked $totalStepsToday steps today!"))
+        totalStepsToday = (totalStepsSinceBoot - initialStepsBootOffset).toInt()
 
-        // Debounce database sync (save if steps grew by more than 50 steps)
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(
+            NOTIFICATION_ID,
+            buildActivityNotification("$totalStepsToday steps today!")
+        )
+
         if (totalStepsToday - lastSavedSteps >= 50) {
             lastSavedSteps = totalStepsToday
-            syncStepsToSupabase(totalStepsToday)
+            persistSteps(totalStepsToday)
         }
     }
 
-    private fun syncStepsToSupabase(steps: Int) {
+    private fun persistSteps(steps: Int) {
         serviceScope.launch {
             try {
-                val userId = SupabaseClient.client.postgrest.postgrest.currentSerializer // Handled via session
-                val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                
-                // Construct basic payload (upsert steps history)
-                // In production, GoTrue active user ID is used automatically
-                // Here we upsert steps for the current date
-                // SupabaseClient.client.postgrest["step_counts"].upsert(...)
+                val today = LocalDate.now().toString()
+
+                db.stepDao().upsertSteps(
+                    StepEntity(date = today, steps = steps)
+                )
+
+                SupabaseClient.client.postgrest.from("step_counts").upsert(
+                    mapOf(
+                        "date" to today,
+                        "steps" to steps,
+                        "calories" to 0,
+                        "distance_meters" to 0.0,
+                        "updated_at" to Instant.now().toString()
+                    )
+                )
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -102,7 +108,7 @@ class StepCounterService : Service(), SensorEventListener {
 
     private fun buildActivityNotification(text: String): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Thrivio Active Tracker")
+            .setContentTitle("Thrivio Tracker")
             .setContentText(text)
             .setSmallIcon(android.R.drawable.ic_menu_myplaces)
             .setOngoing(true)
@@ -117,16 +123,14 @@ class StepCounterService : Service(), SensorEventListener {
                 CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Keeps Aero step tracking running in the background"
+                description = "Step tracking in background"
             }
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(channel)
         }
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
-    }
+    override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
         super.onDestroy()

@@ -29,8 +29,7 @@ Thumbs.db
 *.key
 secrets.*
 
-# Firebase
-google-services.json
+# Firebase (debug files can be generated)
 google-services-debug.json
 
 # Supabase
